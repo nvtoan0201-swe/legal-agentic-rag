@@ -37,9 +37,23 @@ data/          dữ liệu tải về — bị .gitignore, không commit
 ```bash
 make install            # uv sync
 cp .env.example .env    # điền LLM_BASE_URL, LLM_MODEL, LLM_API_KEY
-make up                 # Qdrant + Postgres
+make up                 # Qdrant (6333) + Postgres (cổng host 55432)
 make test lint
 ```
+
+### Xây corpus (bước 3)
+
+```bash
+make explore            # thống kê metadata  -> reports/data_exploration.md
+make ingest             # chọn văn bản 6 lĩnh vực, parse -> data/processed/*.parquet, reports/data_quality.md
+make load-db            # nạp vào Postgres (documents, units, relations)
+make test-db            # test tích hợp trên database legalrag_test
+```
+
+Lần đầu `make ingest` tải khoảng 4,4 GB vào `data/raw/` (toàn văn hiện tại 785 MB và bản crawl cũ
+3,5 GB, dùng làm nguồn dự phòng cho văn bản bị rỗng). Id đơn vị: `45/2019/QH14#d35-k2-a` (Điều 35,
+khoản 2, điểm a), `#pl1` (phụ lục), `#kt1` (phần đính kèm sau chữ ký), `#body` (văn bản không chia
+Điều). Ghi đè tay trạng thái hiệu lực nằm ở `src/legalrag/ingest/overrides.yaml`.
 
 LLM được gọi qua endpoint tương thích OpenAI (`LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`).
 

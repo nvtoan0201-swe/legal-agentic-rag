@@ -1,1 +1,1 @@
-"""Agent LangGraph (tuần 3+)."""
+"""LangGraph agent (week 3+)."""

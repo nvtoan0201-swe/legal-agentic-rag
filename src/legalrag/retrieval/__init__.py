@@ -1,1 +1,1 @@
-"""Truy xuất: dense, sparse, hybrid, rerank."""
+"""Retrieval: dense, sparse, hybrid, rerank."""

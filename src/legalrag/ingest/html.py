@@ -1,7 +1,7 @@
-"""HTML toàn văn (vbpl.vn) → các dòng văn bản thuần.
+"""vbpl.vn full-text HTML -> plain text lines.
 
-Nội dung nằm trong `<table class="detailcontent">`, mỗi đoạn là một `<p>`. Bảng bên trong nội
-dung được giữ dưới dạng dòng `| ô | ô |` để parser nhận ra.
+Content sits in `<table class="detailcontent">`, one `<p>` per paragraph. Tables inside the
+content become `| cell | cell |` lines so the parser can recognise them.
 """
 
 from __future__ import annotations

@@ -1,0 +1,36 @@
+# Manual corrections of effect status for anchor laws.
+# verified: true  = backed by a provision in the corpus itself (unit id cited in `source`).
+# verified: false = best knowledge only; applied but flagged for review on vbpl.vn.
+- so_ky_hieu: 31/2024/QH15
+  ngay_co_hieu_luc: 2024-08-01
+  status: in_force
+  verified: true
+  source: "43/2024/QH15#d1-k2 sửa 31/2024/QH15#d252-k1: hiệu lực từ 01/08/2024; 43/2024/QH15#d5"
+- so_ky_hieu: 45/2013/QH13
+  loai_van_ban: Luật
+  ngay_het_hieu_luc: 2024-08-01
+  status: expired
+  replaced_by: 31/2024/QH15
+  verified: true
+  source: "31/2024/QH15#d252-k4 (hết hiệu lực khi Luật Đất đai 2024 có hiệu lực, tức 01/08/2024)"
+- so_ky_hieu: 23/2008/QH12
+  loai_van_ban: Luật
+  ngay_het_hieu_luc: 2025-01-01
+  status: expired
+  replaced_by: 36/2024/QH15
+  verified: true
+  source: "36/2024/QH15#d88-k1, 36/2024/QH15#d88-k3 (trừ các trường hợp tại Điều 89)"
+- so_ky_hieu: 04/2007/QH12
+  loai_van_ban: Luật
+  ngay_het_hieu_luc: 2026-07-01
+  status: expired
+  replaced_by: 109/2025/QH15
+  verified: true
+  source: "109/2025/QH15#d29-k1, 109/2025/QH15#d29-k3 (có ngoại lệ chuyển tiếp)"
+- so_ky_hieu: 41/2024/QH15
+  status: in_force
+  ngay_het_hieu_luc: null
+  verified: false
+  source: >-
+    metadata hiện tại ghi 'Hết hiệu lực toàn bộ' từ 01/01/2026 nhưng không có văn bản thay thế trong
+    đồ thị; legacy_metadata ghi 'In effect'. Cần kiểm trên vbpl.vn.

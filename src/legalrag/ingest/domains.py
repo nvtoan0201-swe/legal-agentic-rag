@@ -1,9 +1,9 @@
-"""Xác định phạm vi văn bản cho từng lĩnh vực.
+"""Decide which documents belong to a legal domain.
 
-Không lọc theo `nganh`/`linh_vuc` được: 66% văn bản có linh_vuc = "Chưa phân loại" và các luật mới
-nhất để trống cả hai trường. Cách làm: chọn luật gốc (anchor) theo tên, rồi mở rộng theo đồ thị quan
-hệ: văn bản hướng dẫn / sửa đổi / thay thế / hợp nhất luật gốc (bước 1), rồi văn bản hướng dẫn hoặc
-sửa đổi các văn bản bước 1 (bước 2). Chỉ giữ văn bản trung ương có tính quy phạm.
+`nganh`/`linh_vuc` cannot be used: 69% of `linh_vuc` is "Chưa phân loại" and the newest laws leave
+both empty. Instead: pick anchor laws by title, then follow the relation graph: documents that
+guide / amend / replace / consolidate the anchors (hop 1), then documents that guide or amend
+hop-1 documents (hop 2). Only central, normative documents are kept.
 """
 
 from __future__ import annotations
@@ -14,8 +14,8 @@ import pandas as pd
 
 from legalrag.ingest.relations import Rel
 
-# Tên luật gốc (không kèm chữ "Luật"/"Bộ luật"). Tiêu đề trong dataset không đồng nhất: có bản ghi
-# chỉ ghi "Đất đai" hay "doanh nghiệp", có bản viết "Bộ Luật lao động".
+# Anchor law names without "Luật"/"Bộ luật". Titles are inconsistent: some records are just
+# "Đất đai" or "doanh nghiệp", others "Bộ Luật lao động".
 DOMAINS: dict[str, list[str]] = {
     "lao_dong": ["Lao động", "Việc làm"],
     "dat_dai": ["Đất đai"],
@@ -35,10 +35,8 @@ DOMAINS: dict[str, list[str]] = {
 
 
 def anchor_regex(names: list[str]) -> re.Pattern[str]:
-    """Khớp tên luật đứng sau "Luật " hoặc ở đầu tiêu đề.
-
-    Tên phải kết thúc bởi "số", "năm", dấu phẩy/chấm phẩy, " và " hoặc hết tiêu đề.
-    """
+    """Match a law name after "Luật " or at the start of the title, ending at "số", "năm",
+    a comma/semicolon, " và " or the end of the title."""
     alts = "|".join(re.escape(n) for n in names)
     return re.compile(
         rf"(?:^|luật\s+)(?:{alts})(?=\s+số|\s+năm|\s*$|\s*,|\s*;|\s+và\s)", re.IGNORECASE
@@ -58,12 +56,12 @@ NORMATIVE_TYPES = {
     "Văn bản hợp nhất",
 }
 CENTRAL_SCOPES = {"Trung ương", "Toàn quốc"}
-# Các loại chỉ cơ quan trung ương ban hành; không cần xét `pham_vi` (đôi khi bị trống).
+# Always issued centrally, so `pham_vi` (sometimes empty) is not needed.
 ALWAYS_CENTRAL = {"Luật", "Bộ luật", "Pháp lệnh", "Nghị định", "Thông tư", "Thông tư liên tịch"}
 
-# Quan hệ dùng để kéo văn bản vào phạm vi: actor có quan hệ này với văn bản đã trong phạm vi.
+# Relations that pull an actor into scope when its target is already in scope.
 PULL_IN = {Rel.GUIDES, Rel.AMENDS, Rel.REPLACES, Rel.REPEALS, Rel.REPEALS_PART, Rel.CONSOLIDATES}
-# Văn bản cũ bị anchor thay thế/bãi bỏ: giữ lại để làm câu eval "văn bản hết hiệu lực".
+# Old documents replaced by an anchor: kept for "expired document" eval questions.
 PREDECESSOR = {Rel.REPLACES, Rel.REPEALS}
 
 
@@ -74,10 +72,10 @@ def eligible(meta: pd.DataFrame) -> pd.Series:
 
 
 def find_anchors(meta: pd.DataFrame, names: list[str]) -> pd.DataFrame:
-    """Luật gốc của lĩnh vực: luật/bộ luật/pháp lệnh, luật sửa đổi riêng luật đó, và văn bản hợp
-    nhất của luật đó. Bỏ luật sửa nhiều luật cùng lúc (vd 03/2022/QH15) vì sẽ kéo lĩnh vực khác vào;
-    chúng vẫn vào phạm vi ở hop 1 qua quan hệ `amends`. Dataset thiếu một số luật gốc (vd Luật thuế
-    TNCN 2007), khi đó luật sửa đổi và văn bản hợp nhất là cửa vào duy nhất."""
+    """Anchor laws: laws/codes/ordinances, amendments of that single law, and consolidated texts
+    (VBHN) of it. Omnibus amendments (e.g. 03/2022/QH15) are excluded because they would pull other
+    domains in; they still enter at hop 1 through `amends`. Some base laws are missing from the
+    dataset (e.g. Luật thuế TNCN 2007), so amendments and VBHN are the only way in."""
     title = meta["title"].fillna("")
     loai = meta["loai_van_ban"]
     title_ok = title.str.contains(anchor_regex(names))
@@ -92,7 +90,7 @@ def find_anchors(meta: pd.DataFrame, names: list[str]) -> pd.DataFrame:
 
 
 def scope_domain(meta: pd.DataFrame, edges: pd.DataFrame, names: list[str]) -> pd.DataFrame:
-    """Trả về các văn bản thuộc lĩnh vực, cột `hop` = 0 (anchor), 1, 2, hoặc 'pred' (tiền nhiệm)."""
+    """Documents of a domain; column `hop` is 0 (anchor), 1, 2 or 'pred' (predecessor)."""
     ok = set(meta.loc[eligible(meta), "id"])
     anchors = set(find_anchors(meta, names)["id"]) & ok
     pull = edges[edges["rel"].isin(PULL_IN)]

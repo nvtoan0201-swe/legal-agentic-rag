@@ -1,11 +1,11 @@
-"""Chuẩn hoá nhãn quan hệ giữa văn bản.
+"""Normalise relationship labels between documents.
 
-Bảng `relationships` trộn hai bộ nhãn: nhãn "hành động" (doc_id tác động lên other_doc_id, vd
-"Thay thế", "Sửa đổi, bổ sung") và nhãn "vai trò" (mô tả other_doc_id là gì đối với doc_id, vd
-"Văn bản sửa đổi" = other_doc_id sửa đổi doc_id). Chiều được kiểm chứng bằng ngày ban hành:
-văn bản tác động luôn ban hành sau văn bản bị tác động (xem scripts/explore_metadata.py).
+The `relationships` table mixes two vocabularies: action labels (doc_id acts on other_doc_id,
+e.g. "Thay thế", "Sửa đổi, bổ sung") and role labels (what other_doc_id is to doc_id, e.g.
+"Văn bản sửa đổi" = other_doc_id amends doc_id). Directions were checked against issue dates:
+the acting document is issued later in >= 99% of edges (scripts/explore_metadata.py).
 
-Mỗi nhãn ánh xạ tới (loại chuẩn, chiều). Chiều "fwd": actor = doc_id; "rev": actor = other_doc_id.
+Each label maps to (canonical type, direction). "fwd": actor = doc_id; "rev": actor = other_doc_id.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import pandas as pd
 
 class Rel(StrEnum):
     REPLACES = "replaces"
-    REPEALS = "repeals"  # bãi bỏ / quy định hết hiệu lực toàn bộ
+    REPEALS = "repeals"  # bãi bỏ / quy định hết hiệu lực
     REPEALS_PART = "repeals_part"
     AMENDS = "amends"
     GUIDES = "guides"  # quy định chi tiết, hướng dẫn thi hành
@@ -62,7 +62,7 @@ LABELS: dict[str, tuple[Rel, str]] = {
 
 
 def normalize(rels: pd.DataFrame) -> pd.DataFrame:
-    """relationships(doc_id, other_doc_id, relationship) → (actor, target, rel, label), bỏ trùng."""
+    """(doc_id, other_doc_id, relationship) -> deduplicated (actor, target, rel, label)."""
     mapped = rels["relationship"].map(lambda x: LABELS.get(x, (Rel.OTHER, "fwd")))
     kind = mapped.str[0]
     fwd = mapped.str[1] == "fwd"

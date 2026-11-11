@@ -1,1 +1,1 @@
-"""FastAPI (sau này)."""
+"""FastAPI service (later)."""

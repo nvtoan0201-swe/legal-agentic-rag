@@ -1,4 +1,4 @@
-"""Cấu hình đọc từ biến môi trường / file .env."""
+"""Settings from environment variables / .env."""
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     llm_model: str = "gpt-4o-mini"
     llm_api_key: str = ""
 
-    postgres_dsn: str = "postgresql://legalrag:legalrag@localhost:5432/legalrag"
+    postgres_dsn: str = "postgresql://legalrag:legalrag@localhost:55432/legalrag"
     qdrant_url: str = "http://localhost:6333"
 
     data_dir: str = "data"

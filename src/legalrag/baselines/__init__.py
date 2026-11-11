@@ -1,1 +1,1 @@
-"""Baseline không agentic: vanilla RAG, LLM không truy xuất."""
+"""Non-agentic baselines: vanilla RAG, LLM without retrieval."""
