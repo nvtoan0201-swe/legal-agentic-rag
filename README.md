@@ -45,5 +45,32 @@ LLM được gọi qua endpoint tương thích OpenAI (`LLM_BASE_URL`, `LLM_MODE
 
 ## Dữ liệu và giấy phép
 
-<!-- LICENSE-SECTION -->
-_Đang kiểm tra (bước 2)._
+### Corpus: [th1nhng0/vietnamese-legal-documents](https://huggingface.co/datasets/th1nhng0/vietnamese-legal-documents)
+
+- **Giấy phép:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) cho phần dataset đã biên
+  soạn (schema, xử lý, tuyển chọn). Bản thân văn bản quy phạm pháp luật là tài sản công theo
+  Luật Tiếp cận thông tin 104/2016/QH13 và Luật Ban hành văn bản QPPL 64/2025/QH15 (theo dataset card).
+- **Nghĩa vụ:** ghi công tác giả khi dùng lại / phân phối lại dữ liệu đã xử lý:
+
+  ```bibtex
+  @dataset{ngo_thinh_2026_vietnamese_legal,
+    title     = {Vietnamese Legal Documents},
+    author    = {Thịnh Ngô},
+    year      = {2026},
+    publisher = {Hugging Face},
+    url       = {https://huggingface.co/datasets/th1nhng0/vietnamese-legal-documents},
+    doi       = {10.57967/hf/8598},
+  }
+  ```
+
+- **Nguồn gốc:** crawl từ [vbpl.vn](https://vbpl.vn) (Cơ sở dữ liệu quốc gia về văn bản pháp luật,
+  Bộ Tư pháp), snapshot ngày 2026-07-23. Tình trạng hiệu lực phản ánh thời điểm crawl, có thể trễ
+  so với thực tế. Repo dùng revision `8977887f17be2defae4c5171d55562e1cde7d695`.
+
+### Bộ QA: [thangvip/vietnamese-legal-qa](https://huggingface.co/datasets/thangvip/vietnamese-legal-qa)
+
+- **Giấy phép: không khai báo** trên dataset card (kiểm tra 2026-11-11). Chỉ dùng nội bộ để
+  đánh giá; không phân phối lại cho tới khi tác giả làm rõ giấy phép.
+- Câu hỏi/đáp án do LLM sinh tự động từ nội dung điều luật, nên cần duyệt lại trước khi làm gold.
+
+Dữ liệu tải về nằm trong `data/` và **không được commit**.

@@ -1,4 +1,4 @@
-.PHONY: install lint format test up down explore
+.PHONY: install lint format test up down explore sample
 
 install:
 	uv sync
@@ -21,4 +21,7 @@ down:
 	docker compose down
 
 explore:
-	uv run python scripts/explore_metadata.py
+	uv run python -I scripts/explore_metadata.py
+
+sample:
+	uv run python -I scripts/sample_fulltext.py
