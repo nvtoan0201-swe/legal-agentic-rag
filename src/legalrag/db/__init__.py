@@ -28,6 +28,7 @@ DOC_COLS = [
     "status_flags",
     "domains",
     "hop_rank",
+    "core",
     "content_source",
     "parse_clean",
     "parse_issues",

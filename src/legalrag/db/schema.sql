@@ -18,6 +18,7 @@ CREATE TABLE documents (
     status_flags      text[] NOT NULL DEFAULT '{}',
     domains           text[] NOT NULL,
     hop_rank          int,
+    core              boolean NOT NULL,          -- false: other-domain law pulled in by an amendment
     content_source    text NOT NULL,             -- vbpl_html | legacy_text | none
     parse_clean       boolean,
     parse_issues      jsonb,

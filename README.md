@@ -25,7 +25,9 @@ src/legalrag/
   graph/       agent LangGraph (tuần 3+)
   baselines/   RAG không agentic
   api/         FastAPI (sau này)
-eval/          bộ câu hỏi, loader, metric
+  eval/        schema câu hỏi, loader bộ QA, metric truy xuất + câu trả lời, sinh nháp
+  db/          schema Postgres + loader
+eval/          bộ câu hỏi được commit (tự viết, nháp đã duyệt) + hướng dẫn
 scripts/       script chạy một lần (khám phá dữ liệu, build index...)
 tests/
 reports/       báo cáo khám phá / chất lượng dữ liệu (không chứa dữ liệu thô)
@@ -54,6 +56,15 @@ Lần đầu `make ingest` tải khoảng 4,4 GB vào `data/raw/` (toàn văn hi
 3,5 GB, dùng làm nguồn dự phòng cho văn bản bị rỗng). Id đơn vị: `45/2019/QH14#d35-k2-a` (Điều 35,
 khoản 2, điểm a), `#pl1` (phụ lục), `#kt1` (phần đính kèm sau chữ ký), `#body` (văn bản không chia
 Điều). Ghi đè tay trạng thái hiệu lực nằm ở `src/legalrag/ingest/overrides.yaml`.
+
+### Bộ eval (bước 4)
+
+```bash
+make eval-data          # ánh xạ thangvip/vietnamese-legal-qa -> data/eval/legal_qa.jsonl, reports/eval_mapping.md
+make check-eval         # kiểm tra eval/sets/*.jsonl
+```
+
+Xem `eval/README.md`: định dạng câu hỏi, hướng dẫn tự viết, sinh nháp multi-hop bằng LLM, metric.
 
 LLM được gọi qua endpoint tương thích OpenAI (`LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`).
 

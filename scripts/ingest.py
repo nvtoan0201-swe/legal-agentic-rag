@@ -129,6 +129,8 @@ def main() -> None:
             all_lines[r.id], src = [], "none"
         sources.append(src)
     docs["content_source"] = sources
+    # Laws of other domains pulled in only because they amend/repeal an anchor are peripheral.
+    docs["core"] = ~(docs["loai_van_ban"].isin(["Luật", "Bộ luật"]) & docs["hop_rank"].gt(0))
 
     # 3. parse
     unit_rows, parse_info = [], {}
@@ -289,6 +291,7 @@ def main() -> None:
         "status_flags",
         "domains",
         "hop_rank",
+        "core",
         "content_source",
         "parse_clean",
         "parse_issues",

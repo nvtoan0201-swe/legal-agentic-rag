@@ -53,6 +53,7 @@ def test_load_roundtrip(tmp_path):
                 "status_flags": [],
                 "domains": ["lao_dong"],
                 "hop_rank": 0,
+                "core": True,
                 "content_source": "vbpl_html",
                 "parse_clean": True,
                 "parse_issues": "{}",
