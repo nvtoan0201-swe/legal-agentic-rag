@@ -1,4 +1,5 @@
-.PHONY: install lint format test up down explore sample ingest load-db test-db eval-data check-eval
+.PHONY: install lint format test up down explore sample ingest load-db test-db eval-data check-eval \
+	index eval-retrieval eval-agent serve
 
 install:
 	uv sync
@@ -42,3 +43,16 @@ eval-data:
 
 check-eval:
 	uv run python -I scripts/check_eval_set.py eval/sets/*.jsonl
+
+# Bước 5-8: chỉ mục, đánh giá, demo.
+index:
+	uv run python -I scripts/build_index.py
+
+eval-retrieval:
+	uv run python -I scripts/eval_retrieval.py
+
+eval-agent:
+	uv run python -I scripts/eval_agent.py
+
+serve:
+	uv run uvicorn legalrag.api.app:app --port 8080
