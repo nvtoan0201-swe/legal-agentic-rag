@@ -26,20 +26,6 @@ make eval-retrieval eval-agent
 make serve              # http://localhost:8080
 ```
 
-## Kết quả truy xuất
-
-Recall@5 ở mức Điều. `situational` là câu hỏi tình huống, không nêu số Điều.
-
-| Cấu hình | situational (56) | lqa test (186) | luật cũ → luật mới (153) |
-|---|---|---|---|
-| BM25 | 0,491 | 0,952 | 0,647 |
-| Dense | 0,536 | 0,968 | 0,765 |
-| Hybrid | 0,562 | 0,962 | 0,725 |
-| Hybrid + rerank | 0,661 | 0,989 | 0,693 |
-| Hybrid + rerank + lọc hiệu lực | **0,812** | **0,995** | **0,876** |
-
-Kết quả trả lời đầu cuối (cần LLM) chưa chạy.
-
 ## Dữ liệu
 
 - Corpus: [th1nhng0/vietnamese-legal-documents](https://huggingface.co/datasets/th1nhng0/vietnamese-legal-documents)
