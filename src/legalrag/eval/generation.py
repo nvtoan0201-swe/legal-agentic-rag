@@ -59,11 +59,14 @@ def citation_scores(
     cited: Sequence[str],
     item: EvalItem,
     status_of: Callable[[str], str | None] | None = None,
+    norm: Callable[[str], str] = to_article,
 ) -> dict:
-    """Article-level precision/recall of citations, plus citing forbidden or expired documents."""
-    c = {to_article(x) for x in cited}
-    g = {to_article(x) for x in item.gold_articles}
-    f = {to_article(x) for x in item.forbidden_articles}
+    """Article-level precision/recall of citations, plus citing forbidden or expired documents.
+
+    `norm` maps unit ids to the comparison key (default: article; see eval.aliases for VBHN)."""
+    c = {norm(x) for x in cited}
+    g = {norm(x) for x in item.gold_articles}
+    f = {norm(x) for x in item.forbidden_articles}
     out = {
         "n_cited": float(len(c)),
         "cite_precision": len(c & g) / len(c) if c else float("nan"),
@@ -157,6 +160,7 @@ def evaluate_answers(
     answer: Callable[[EvalItem], Answer],
     judge: LLMJudge | None = None,
     status_of: Callable[[str], str | None] | None = None,
+    norm: Callable[[str], str] | None = None,
 ) -> dict:
     from legalrag.eval.metrics import summarize
 
@@ -166,7 +170,7 @@ def evaluate_answers(
         pairs.append((it, ans))
         cited = ans.citations or extract_citations(ans.text)
         row = {"id": it.id, "category": it.category.value, "abstained": float(is_abstain(ans))}
-        row |= citation_scores(cited, it, status_of)
+        row |= citation_scores(cited, it, status_of, norm or to_article)
         if judge is not None and it.expected_behavior != Behavior.ABSTAIN:
             row |= judge.correctness(it, ans)
             row |= judge.faithfulness(ans)
