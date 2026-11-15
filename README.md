@@ -1,101 +1,49 @@
 # legal-agentic-rag
 
-Trợ lý tra cứu pháp luật Việt Nam bằng Agentic RAG.
+Trợ lý tra cứu pháp luật Việt Nam bằng Agentic RAG: trả lời có trích dẫn tới Điều/Khoản, chỉ dùng
+văn bản còn hiệu lực, từ chối khi không đủ căn cứ.
 
-> ⚠️ **Cảnh báo:** Đây là công cụ tham khảo phục vụ học tập và nghiên cứu. Kết quả có thể
-> sai, thiếu hoặc dựa trên văn bản đã hết hiệu lực. **Không thay thế tư vấn pháp lý** của luật
-> sư hoặc cơ quan có thẩm quyền. Luôn đối chiếu với văn bản gốc trên Công báo /
-> Cơ sở dữ liệu quốc gia về văn bản pháp luật trước khi sử dụng.
+> ⚠️ Công cụ tham khảo cho học tập, nghiên cứu. Không thay thế tư vấn pháp lý.
 
-## Mục tiêu
+## Thành phần
 
-- Trả lời có **trích dẫn tới Điều/Khoản/Điểm** (vd: `45/2019/QH14#d35-k2`).
-- Dùng đúng **văn bản còn hiệu lực** tại thời điểm hỏi.
-- **Abstain** (từ chối trả lời) khi không đủ căn cứ.
-- Mọi thành phần agentic phải được chứng minh bằng eval:
-  baseline → phân tích lỗi → thêm thành phần → ablation.
+- **Corpus:** 1.604 văn bản thuộc 6 lĩnh vực (lao động, BHXH, HN&GĐ, giao thông, đất đai, thuế TNCN),
+  tách thành Chương/Điều/Khoản/Điểm, nạp vào Postgres.
+- **Truy xuất:** BM25 + dense (bge-m3, Qdrant) + RRF, rerank bằng bge-reranker-v2-m3.
+- **Agent (LangGraph):** phân tích câu hỏi → tìm kiếm có lọc hiệu lực → mở rộng theo dẫn chiếu giữa
+  các điều khoản → từ chối nếu bằng chứng yếu → sinh câu trả lời → kiểm tra trích dẫn.
+- **Eval:** bộ câu hỏi tự động + 66 câu tình huống; ablation từng thành phần.
+- **Demo:** FastAPI + trang web.
 
-## Cấu trúc
-
-```
-src/legalrag/
-  ingest/      tải, lọc, parse Chương → Điều → Khoản → Điểm
-  index/       chỉ mục Qdrant / BM25
-  retrieval/   dense, sparse, hybrid, rerank
-  graph/       agent LangGraph (tuần 3+)
-  baselines/   RAG không agentic
-  api/         FastAPI (sau này)
-  eval/        schema câu hỏi, loader bộ QA, metric truy xuất + câu trả lời, sinh nháp
-  db/          schema Postgres + loader
-eval/          bộ câu hỏi được commit (tự viết, nháp đã duyệt) + hướng dẫn
-scripts/       script chạy một lần (khám phá dữ liệu, build index...)
-tests/
-reports/       báo cáo khám phá / chất lượng dữ liệu (không chứa dữ liệu thô)
-data/          dữ liệu tải về — bị .gitignore, không commit
-```
-
-## Bắt đầu
+## Chạy
 
 ```bash
-make install            # uv sync
-cp .env.example .env    # điền LLM_BASE_URL, LLM_MODEL, LLM_API_KEY
-make up                 # Qdrant (6333) + Postgres (cổng host 55432)
-make test lint
+cp .env.example .env    # điền LLM_BASE_URL, LLM_MODEL, LLM_API_KEY (tuỳ chọn)
+make install up
+make ingest load-db     # xây corpus
+make index              # BM25 + vector
+make eval-retrieval eval-agent
+make serve              # http://localhost:8080
 ```
 
-### Xây corpus (bước 3)
+## Kết quả truy xuất
 
-```bash
-make explore            # thống kê metadata  -> reports/data_exploration.md
-make ingest             # chọn văn bản 6 lĩnh vực, parse -> data/processed/*.parquet, reports/data_quality.md
-make load-db            # nạp vào Postgres (documents, units, relations)
-make test-db            # test tích hợp trên database legalrag_test
-```
+Recall@5 ở mức Điều. `situational` là câu hỏi tình huống, không nêu số Điều.
 
-Lần đầu `make ingest` tải khoảng 4,4 GB vào `data/raw/` (toàn văn hiện tại 785 MB và bản crawl cũ
-3,5 GB, dùng làm nguồn dự phòng cho văn bản bị rỗng). Id đơn vị: `45/2019/QH14#d35-k2-a` (Điều 35,
-khoản 2, điểm a), `#pl1` (phụ lục), `#kt1` (phần đính kèm sau chữ ký), `#body` (văn bản không chia
-Điều). Ghi đè tay trạng thái hiệu lực nằm ở `src/legalrag/ingest/overrides.yaml`.
+| Cấu hình | situational (56) | lqa test (186) | luật cũ → luật mới (153) |
+|---|---|---|---|
+| BM25 | 0,491 | 0,952 | 0,647 |
+| Dense | 0,536 | 0,968 | 0,765 |
+| Hybrid | 0,562 | 0,962 | 0,725 |
+| Hybrid + rerank | 0,661 | 0,989 | 0,693 |
+| Hybrid + rerank + lọc hiệu lực | **0,812** | **0,995** | **0,876** |
 
-### Bộ eval (bước 4)
+Kết quả trả lời đầu cuối (cần LLM) chưa chạy.
 
-```bash
-make eval-data          # ánh xạ thangvip/vietnamese-legal-qa -> data/eval/legal_qa.jsonl, reports/eval_mapping.md
-make check-eval         # kiểm tra eval/sets/*.jsonl
-```
+## Dữ liệu
 
-Xem `eval/README.md`: định dạng câu hỏi, hướng dẫn tự viết, sinh nháp multi-hop bằng LLM, metric.
-
-LLM được gọi qua endpoint tương thích OpenAI (`LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`).
-
-## Dữ liệu và giấy phép
-
-### Corpus: [th1nhng0/vietnamese-legal-documents](https://huggingface.co/datasets/th1nhng0/vietnamese-legal-documents)
-
-- **Giấy phép:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) cho phần dataset đã biên
-  soạn (schema, xử lý, tuyển chọn). Bản thân văn bản quy phạm pháp luật là tài sản công theo
-  Luật Tiếp cận thông tin 104/2016/QH13 và Luật Ban hành văn bản QPPL 64/2025/QH15 (theo dataset card).
-- **Nghĩa vụ:** ghi công tác giả khi dùng lại / phân phối lại dữ liệu đã xử lý:
-
-  ```bibtex
-  @dataset{ngo_thinh_2026_vietnamese_legal,
-    title     = {Vietnamese Legal Documents},
-    author    = {Thịnh Ngô},
-    year      = {2026},
-    publisher = {Hugging Face},
-    url       = {https://huggingface.co/datasets/th1nhng0/vietnamese-legal-documents},
-    doi       = {10.57967/hf/8598},
-  }
-  ```
-
-- **Nguồn gốc:** crawl từ [vbpl.vn](https://vbpl.vn) (Cơ sở dữ liệu quốc gia về văn bản pháp luật,
-  Bộ Tư pháp), snapshot ngày 2026-07-23. Tình trạng hiệu lực phản ánh thời điểm crawl, có thể trễ
-  so với thực tế. Repo dùng revision `8977887f17be2defae4c5171d55562e1cde7d695`.
-
-### Bộ QA: [thangvip/vietnamese-legal-qa](https://huggingface.co/datasets/thangvip/vietnamese-legal-qa)
-
-- **Giấy phép: không khai báo** trên dataset card (kiểm tra 2026-11-11). Chỉ dùng nội bộ để
-  đánh giá; không phân phối lại cho tới khi tác giả làm rõ giấy phép.
-- Câu hỏi/đáp án do LLM sinh tự động từ nội dung điều luật, nên cần duyệt lại trước khi làm gold.
-
-Dữ liệu tải về nằm trong `data/` và **không được commit**.
+- Corpus: [th1nhng0/vietnamese-legal-documents](https://huggingface.co/datasets/th1nhng0/vietnamese-legal-documents)
+  (CC BY 4.0, Thịnh Ngô 2026, doi:10.57967/hf/8598), crawl từ vbpl.vn.
+- Bộ QA: [thangvip/vietnamese-legal-qa](https://huggingface.co/datasets/thangvip/vietnamese-legal-qa)
+  (chưa khai báo giấy phép, chỉ dùng nội bộ để đánh giá).
+- Dữ liệu tải về nằm trong `data/`, không commit.
